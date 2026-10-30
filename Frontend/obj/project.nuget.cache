@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "Cel0MUCkOjU=",
+  "success": true,
+  "projectFilePath": "/home/yo/Descargas/api-5to/Frontend/Frontend.csproj",
+  "expectedPackageFiles": [
+    "/home/yo/.nuget/packages/microsoft.aspnetcore.app.internal.assets/10.0.5/microsoft.aspnetcore.app.internal.assets.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}
