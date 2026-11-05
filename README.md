@@ -1,135 +1,162 @@
-# API 5to
+# API de Clientes con Registro y Login
 
-API REST para gestión de clientes con autenticación JWT, SQLite y Swagger. El proyecto incluye registro, login, consulta y administración de clientes.
-
-## Descripción
-
-Esta API permite:
-
-- Registrar nuevos clientes
-- Iniciar sesión con email y contraseña
-- Generar token JWT para autenticación
-- Consultar todos los clientes
-- Consultar un cliente por ID
-- Actualizar datos de un cliente
-- Eliminar un cliente
-
-## Stack
-
-- ASP.NET Core Web API
-- .NET 10
-- Entity Framework Core
-- SQLite
-- JWT Bearer
-- Swagger / OpenAPI
+Proyecto desarrollado en ASP.NET Core Web API con Entity Framework Core, Swagger, JWT y GraphQL. La API permite registrar clientes, iniciar sesión, consultar, actualizar y eliminar información de clientes.
 
 ## Requisitos
 
-- .NET SDK 10.0 o superior
-- Un editor como VS Code o Visual Studio
+- .NET SDK 9.0 o superior
+- Visual Studio 2022 o VS Code
+- SQLite
 
 ## Estructura del proyecto
 
-- `Program.cs`: configuración de servicios, autenticación, base de datos y pipeline HTTP
-- `Controllers/`: endpoints de la API
-- `Services/`: lógica de negocio
-- `Repositories/`: acceso a datos
-- `Data/`: DbContext
-- `Models/`: entidades del dominio
-- `DTOs/`: request y response models
-- `Migrations/`: migraciones de Entity Framework
-
-## Configuración
-
-La API usa SQLite por defecto con la cadena de conexión en `appsettings.json`:
-
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Data Source=clientes.db"
-}
+```text
+ApiClientes/
+├── ApiClientes.Api/
+│   ├── Controllers/
+│   ├── DTOs/
+│   ├── GraphQL/
+│   ├── Infrastructure/
+│   ├── Migrations/
+│   ├── Models/
+│   ├── Services/
+│   ├── appsettings.json
+│   ├── Program.cs
+│   └── ApiClientes.Api.csproj
+├── ApiClientes.Tests/
+│   └── ClienteServiceTests.cs
+├── ApiClientes.slnx
+├── README.md
+└── clientes.db
 ```
 
-También se configuran los valores JWT en el mismo archivo:
+## Instalación y ejecución
 
-```json
-"Jwt": {
-  "Key": "ClaveSuperSecretaParaApiDeClientes1234567890",
-  "Issuer": "APIClientes",
-  "Audience": "APIClientesClient"
-}
-```
-
-> En un entorno real, se recomienda usar secretos o variables de entorno en lugar de valores fijos.
-
-## Ejecutar la API
-
-Desde la raíz del proyecto:
+1. Clonar o abrir el proyecto en la carpeta del repositorio.
+2. Restaurar paquetes:
 
 ```bash
 dotnet restore
-dotnet run
 ```
 
-La aplicación puede abrir Swagger en el entorno de desarrollo y creará la base de datos automáticamente si no existe.
+3. Ejecutar la API:
 
-## Endpoints
+```bash
+dotnet run --project ApiClientes.Api
+```
 
-### Autenticación
+4. La API quedará disponible en:
 
-| Método | Ruta | Descripción |
-| --- | --- | --- |
-| POST | `/api/Clientes/register` | Registra un nuevo cliente |
-| POST | `/api/Clientes/login` | Inicia sesión y devuelve un token JWT |
+- Swagger: https://localhost:5001/swagger
+- GraphQL: https://localhost:5001/graphql
 
-### Clientes
+## Base de datos
 
-| Método | Ruta | Descripción |
-| --- | --- | --- |
-| GET | `/api/Clientes` | Obtiene todos los clientes (requiere autenticación) |
-| GET | `/api/Clientes/{id}` | Obtiene un cliente por ID (requiere autenticación) |
-| PUT | `/api/Clientes/{id}` | Actualiza un cliente existente (requiere autenticación) |
-| DELETE | `/api/Clientes/{id}` | Elimina un cliente (requiere autenticación) |
+La aplicación usa SQLite por defecto. Al iniciar la API, Entity Framework crea la base de datos y aplica la migración automáticamente.
 
-## Modelos principales
+## Endpoints REST
 
 ### Registro
-
-```json
-{
-  "nombre": "Juan Pérez",
-  "email": "juan@correo.com",
-  "password": "123456"
-}
-```
+- POST /api/clientes/register
 
 ### Login
+- POST /api/clientes/login
 
-```json
-{
-  "email": "juan@correo.com",
-  "password": "123456"
+### Listar clientes
+- GET /api/clientes
+
+### Obtener cliente por ID
+- GET /api/clientes/{id}
+
+### Editar cliente
+- PUT /api/clientes/{id}
+
+### Eliminar cliente
+- DELETE /api/clientes/{id}
+
+> Los endpoints de listado, consulta por ID, actualización y eliminación requieren autenticación JWT.
+
+## Autenticación
+
+El login devuelve un token JWT que se debe enviar en el header:
+
+```http
+Authorization: Bearer <token>
+```
+
+## GraphQL
+
+La API expone operaciones GraphQL en `/graphql`.
+
+### Consulta de clientes
+```graphql
+query {
+  clientes {
+    id
+    nombre
+    email
+    fechaRegistro
+  }
 }
 ```
 
-### Respuesta de login
-
-```json
-{
-  "token": "jwt-token",
-  "id": 1,
-  "nombre": "Juan Pérez",
-  "email": "juan@correo.com",
-  "fechaRegistro": "2026-11-05T00:00:00"
+### Consulta por ID
+```graphql
+query {
+  clienteById(id: 1) {
+    id
+    nombre
+    email
+  }
 }
 ```
+
+### Mutación de registro
+```graphql
+mutation {
+  registerCliente(nombre: "Carlos", email: "carlos@test.com", password: "123456") {
+    id
+    nombre
+    email
+  }
+}
+```
+
+### Login GraphQL
+```graphql
+mutation {
+  loginCliente(email: "carlos@test.com", password: "123456") {
+    success
+    message
+    token
+  }
+}
+```
+
+## SOLID y Clean Code aplicados
+
+- Single Responsibility: cada servicio y controlador tiene una responsabilidad concreta.
+- Open/Closed: los endpoints y servicios se pueden extender sin tocar lógica central innecesaria.
+- Liskov: las implementaciones respetan la interfaz `IClienteService`.
+- Interface Segregation: se usan interfaces para desacoplar servicios y token generation.
+- Dependency Inversion: la capa de control depende de abstracciones (`IClienteService` / `ITokenService`).
+- Clean Code: nombres descriptivos, validaciones claras, métodos pequeños y separación por capas.
 
 ## Seguridad
 
-- Los endpoints de consulta y actualización requieren JWT.
-- El token se valida contra issuer, audience y firma.
-- La clave `Jwt:Key` debe mantenerse privada.
+- Las contraseñas se almacenan con hash mediante BCrypt.
+- La autenticación está protegida con JWT.
+- El email se valida contra duplicados en la base de datos.
 
-## Notas
+## Pruebas
 
-- La base de datos se crea automáticamente con `EnsureCreated()` en `Program.cs`.
-- El proyecto incluye Swagger habilitado en desarrollo para facilitar pruebas.
+Se incluyen pruebas unitarias para validar las reglas principales:
+
+```bash
+dotnet test
+```
+
+## Integrantes
+
+- Grupo 2
+- API de clientes con login y CRUD
