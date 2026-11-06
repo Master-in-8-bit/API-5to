@@ -23,8 +23,9 @@ var configKey = builder.Configuration["Jwt:Key"] ?? "EsteEsUnSecretoMuySeguroPar
 var issuer = builder.Configuration["Jwt:Issuer"] ?? "ApiClientes";
 var audience = builder.Configuration["Jwt:Audience"] ?? "ApiClientesUsers";
 
+var sqliteDbPath = System.IO.Path.Combine(builder.Environment.ContentRootPath, "clientes.db");
 builder.Services.AddDbContext<ApiDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=clientes.db"));
+    options.UseSqlite($"Data Source={sqliteDbPath}"));
 
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddSingleton<ITokenService>(new JwtTokenService(configKey, issuer, audience));
